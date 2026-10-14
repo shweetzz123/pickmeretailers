@@ -1,66 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pick Me Retailers
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Shopee-style online store built with Laravel. Customers browse everyday
+products and order them at retail pricing, or in bulk at resale (wholesale)
+pricing. Orders are paid for manually via **GCash** and verified by an admin —
+there is no third-party payment gateway to integrate.
 
-## About Pick Me Retailers
+## Features
 
-Pick Me Retailers is a Shopee-style online shopping platform built with Laravel where customers can order everyday products in two ways:
+- **Product catalog** with pack-size variants and dual pricing — a regular
+  `product_price` plus an optional bulk `wholesale_price`.
+- **Quantity-based bulk pricing** — any cart line at or above the bulk
+  threshold (default **10 units**) is charged the wholesale/resale price for
+  *all* units in that line; smaller lines pay the retail price. The threshold
+  is configurable (see [Bulk pricing](#bulk-pricing)).
+- **Cart & checkout** with a delivery-details confirmation step before the
+  order is placed.
+- **Manual GCash payments** — the customer scans a QR code, submits a
+  13-digit reference (and an optional screenshot), and an admin confirms it
+  from the payment queue. Confirmation issues an invoice and writes a
+  transaction-ledger entry.
+- **Coupons**, including percentage, fixed-amount, minimum-spend, and free
+  shipping.
+- **Order tracking**, invoices, reviews, wishlist, and newsletter sign-up.
+- **Store locator** and a bulk-order inquiry form.
+- **Admin panel** for products, inventory (with low-stock and history),
+  orders, payments, accounts, coupons, hero slides, sale banners, store
+  locations, and sales reports/CSV export.
+- **Transactional email** (order placed, shipped, delivered, bulk inquiry)
+  dispatched through the queue.
+- Single user type for customers; admins are the only privileged accounts.
 
-- **Retail** — order single items at normal retail prices.
-- **Bulk / Resale** — order in bulk at resale (wholesale) pricing through the reseller catalog, perfect for resellers and sari-sari stores.
+## Tech stack
 
-### Key Features
+- **PHP 8.2+ / Laravel 12**
+- **MySQL** (models use Eloquent; `doctrine/dbal` is available for column
+  changes)
+- **Blade** templating with a **Tailwind CSS** storefront and a Bootstrap
+  admin panel
+- **Vite** for asset bundling
+- **Pest** for tests, **Laravel Socialite** for Google sign-in,
+  **Resend** for mail delivery
 
-- Product catalog with **pack size variants** and dual pricing (retail `product_price` + bulk `wholesale_price`).
-- **Reseller area** (`/reseller`) with a dedicated wholesale catalog priced via `Product::priceFor()`.
-- Shopping cart, checkout, delivery-window scheduling, coupons, and order tracking.
-- Account dashboard, wishlist, and newsletter subscriptions.
-- Admin panel for products, inventory, orders, coupons, and store locations.
-- Email notifications (order confirmation, shipped, delivered, reseller inquiry).
+## Requirements
 
-### Tech Stack
+- PHP 8.2 or newer with the usual Laravel extensions (`mbstring`, `openssl`,
+  `pdo`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `gd` or `imagick`,
+  `fileinfo`)
+- Composer
+- Node.js & npm
+- MySQL (or MariaDB)
 
-- **Laravel** — see the Laravel framework docs below for routing, Eloquent, migrations, queues, and broadcasting, which this application uses throughout.
-- MySQL database, Blade templating, Bootstrap admin panel, and Tailwind-based storefront theming.
+## Getting started
 
-## Learning Laravel
+```bash
+# 1. Install PHP dependencies
+composer install
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+# 2. Create the environment file and generate an app key
+cp .env.example .env
+php artisan key:generate
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 3. Point .env at your database, then create the schema
+php artisan migrate
 
-## Laravel Sponsors
+# 4. Install front-end dependencies and build assets
+npm install
+npm run build
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 5. Link public storage (product images, sale banners, payment QR)
+php artisan storage:link
+```
 
-### Premium Partners
+Then start the app:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan serve
+```
 
-## Contributing
+Or run the server, queue worker, and Vite dev server together:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer dev
+```
 
-## Code of Conduct
+## Bulk pricing
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+A cart line qualifies for wholesale/resale pricing once its quantity reaches
+the bulk threshold. When it qualifies, **every** unit in that line is charged
+the wholesale price; below the threshold, the retail price applies. Products
+without a `wholesale_price` always use the retail price, and pack-size
+variants keep their own price.
 
-## Security Vulnerabilities
+The threshold defaults to **10** and can be changed in `.env`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+SHOP_BULK_PRICE_THRESHOLD=10
+```
+
+Related settings live in `config/shop.php` (`bulk_pricing`,
+`dispatch_window`, `store`).
+
+## Admin access
+
+New accounts created through registration or Google sign-in are plain
+customers. To grant an account admin access, set its `user_type` to `admin`:
+
+```sql
+UPDATE users SET user_type = 'admin' WHERE email = 'you@example.com';
+```
+
+Admins can then reach the admin panel (products, orders, payments,
+inventory, reports, settings, and more).
+
+## Testing
+
+The test suite uses Pest:
+
+```bash
+php artisan test
+```
+
+or
+
+```bash
+composer test
+```
+
+## Deployment
+
+Production deployment notes (DigitalOcean VPS, Cloudflare, supervisor,
+nginx, and the manual GCash payment setup) are in
+[`deploy/README.md`](deploy/README.md). A shorter go-live checklist lives in
+[`PRODUCTION_DEPLOYMENT_CHECKLIST.md`](PRODUCTION_DEPLOYMENT_CHECKLIST.md).
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Built on the [Laravel](https://laravel.com) framework, released under the
+[MIT license](https://opensource.org/licenses/MIT).
