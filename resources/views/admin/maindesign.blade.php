@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>@yield('page_title', 'Admin Dashboard') | Pick Me Retailers</title>
+    <meta name="description" content="Pick Me Retailers admin dashboard" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="stylesheet" href="{{ asset('admin/vendor/bootstrap/css/bootstrap.min.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ asset('admin/vendor/font-awesome/css/font-awesome.min.css') }}"
+    />
+    <link rel="stylesheet" href="{{ asset('admin/css/font.css') }}" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Muli:300,400,700" />
+    <link
+      rel="stylesheet"
+      href="{{ asset('admin/css/style.default.css') }}"
+      id="theme-stylesheet"
+    />
+    <link rel="stylesheet" href="{{ asset('admin/css/custom.css') }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('frontend/images/favicon-32.png') }}?v=2" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('frontend/images/favicon-16.png') }}?v=2" />
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('frontend/images/favicon-192.png') }}?v=2" />
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=2" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('frontend/images/apple-touch-icon.png') }}?v=2" />
+    @stack('styles')
+  </head>
+  <body class="admin-shell">
+    <header class="header admin-topbar">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+          <div class="navbar-header d-flex align-items-center">
+            <a href="{{ route('dashboard') }}" class="navbar-brand admin-brand">
+              <div class="brand-text brand-big visible">
+                <strong class="text-primary">Pick Me Retailers</strong>
+              </div>
+            </a>
+            <button
+              class="sidebar-toggle admin-sidebar-toggle"
+              type="button"
+              aria-label="Toggle sidebar"
+            >
+              <i class="fa fa-long-arrow-left"></i>
+            </button>
+          </div>
+
+          <div class="right-menu list-inline no-margin-bottom admin-topbar-actions">
+            <a href="{{ route('index') }}" class="btn btn-outline-primary btn-sm">
+              <i class="fa fa-external-link mr-1"></i>
+              Storefront
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}" class="d-inline-block mb-0">
+              @csrf
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa fa-sign-out mr-1"></i>
+                Log Out
+              </button>
+            </form>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <div class="d-flex align-items-stretch admin-frame">
+      <nav id="sidebar" class="admin-sidebar">
+        <div class="sidebar-header d-flex align-items-center">
+          <div class="avatar">
+            <img
+              src="{{ asset('frontend/images/img3.jpg') }}"
+              alt="Admin profile"
+              class="img-fluid rounded-circle"
+            />
+          </div>
+          <div class="title">
+            <h1 class="h5">Admin</h1>
+            <p>{{ Auth::user()->name ?? 'Store Manager' }}</p>
+          </div>
+        </div>
+
+        <span class="heading">Operations</span>
+        <ul class="list-unstyled">
+          <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard') }}">
+              <i class="fa fa-dashboard"></i>
+              Dashboard
+            </a>
+          </li>
+
+          <li
+            class="{{ request()->routeIs('admin.vieworders') || request()->routeIs('admin.order.*') ? 'active' : '' }}"
+          >
+            <a href="{{ route('admin.vieworders') }}">
+              <i class="fa fa-shopping-bag"></i>
+              Orders
+            </a>
+          </li>
+
+          <li class="{{ request()->routeIs('admin.sale-banners.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.sale-banners.index') }}">
+              <i class="fa fa-bullhorn"></i>
+              Sale Banners
+            </a>
+          </li>
+
+          <li class="{{ request()->routeIs('admin.hero-slides.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.hero-slides.index') }}">
+              <i class="fa fa-picture-o"></i>
+              Hero Slides
+            </a>
+          </li>
+        </ul>
+
+        <span class="heading">Catalog</span>
+        <ul class="list-unstyled">
+          <li
+            class="{{ request()->routeIs('admin.addproduct') || request()->routeIs('admin.viewproduct') || request()->routeIs('admin.updateproduct') || request()->routeIs('admin.searchproduct') ? 'active' : '' }}"
+          >
+            <a
+              href="#productDropdown"
+              aria-expanded="{{ request()->routeIs('admin.addproduct') || request()->routeIs('admin.viewproduct') || request()->routeIs('admin.updateproduct') || request()->routeIs('admin.searchproduct') ? 'true' : 'false' }}"
+              data-toggle="collapse"
+            >
+              <i class="fa fa-cubes"></i>
+              Products
+            </a>
+            <ul
+              id="productDropdown"
+              class="list-unstyled {{ request()->routeIs('admin.addproduct') || request()->routeIs('admin.viewproduct') || request()->routeIs('admin.updateproduct') || request()->routeIs('admin.searchproduct') ? 'show' : '' }} collapse"
+            >
+              <li><a href="{{ route('admin.addproduct') }}">Add Product</a></li>
+              <li><a href="{{ route('admin.viewproduct') }}">View Products</a></li>
+            </ul>
+          </li>
+
+          <li
+            class="{{ request()->routeIs('admin.addcategory') || request()->routeIs('admin.viewcategory') || request()->routeIs('admin.categoryupdate') ? 'active' : '' }}"
+          >
+            <a
+              href="#categoryDropdown"
+              aria-expanded="{{ request()->routeIs('admin.addcategory') || request()->routeIs('admin.viewcategory') || request()->routeIs('admin.categoryupdate') ? 'true' : 'false' }}"
+              data-toggle="collapse"
+            >
+              <i class="fa fa-tags"></i>
+              Categories
+            </a>
+            <ul
+              id="categoryDropdown"
+              class="list-unstyled {{ request()->routeIs('admin.addcategory') || request()->routeIs('admin.viewcategory') || request()->routeIs('admin.categoryupdate') ? 'show' : '' }} collapse"
+            >
+              <li><a href="{{ route('admin.addcategory') }}">Add Category</a></li>
+              <li><a href="{{ route('admin.viewcategory') }}">View Categories</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <span class="heading">Sales & Inventory</span>
+        <ul class="list-unstyled">
+          <li class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.reports.index') }}">
+              <i class="fa fa-bar-chart"></i>
+              Reports
+            </a>
+          </li>
+          <li class="{{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.coupons.index') }}">
+              <i class="fa fa-ticket"></i>
+              Coupons
+            </a>
+          </li>
+          <li class="{{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.inventory.index') }}">
+              <i class="fa fa-database"></i>
+              Inventory
+            </a>
+          </li>
+        </ul>
+
+        <span class="heading">Payments</span>
+        <ul class="list-unstyled">
+          <li class="{{ request()->routeIs('admin.payments') ? 'active' : '' }}">
+            <a href="{{ route('admin.payments') }}">
+              <i class="fa fa-check-square-o"></i>
+              Payment Verification
+            </a>
+          </li>
+          <li class="{{ request()->routeIs('admin.transactions*') ? 'active' : '' }}">
+            <a href="{{ route('admin.transactions') }}">
+              <i class="fa fa-money"></i>
+              Transaction Ledger
+            </a>
+          </li>
+        </ul>
+
+        <span class="heading">People</span>
+        <ul class="list-unstyled">
+          <li class="{{ request()->routeIs('admin.users') ? 'active' : '' }}">
+            <a href="{{ route('admin.users') }}">
+              <i class="fa fa-users"></i>
+              Users &amp; Roles
+            </a>
+          </li>
+        </ul>
+
+        <span class="heading">Settings</span>
+        <ul class="list-unstyled">
+          <li class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+            <a href="{{ route('admin.settings') }}">
+              <i class="fa fa-qrcode"></i>
+              GCash Payment
+            </a>
+          </li>
+          <li class="{{ request()->routeIs('admin.store-locations.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.store-locations.index') }}">
+              <i class="fa fa-map-marker"></i>
+              Store Locations
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="page-content admin-content">
+        <div class="page-header admin-page-header">
+          <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+              <h2 class="h5 no-margin-bottom">@yield('page_header', 'Admin Dashboard')</h2>
+              <p class="admin-page-subtitle mb-0">
+                @yield('page_subtitle', 'Manage store operations, inventory, orders, and analytics.')
+              </p>
+            </div>
+
+            <div class="admin-page-actions">
+              @yield('page_actions')
+            </div>
+          </div>
+        </div>
+
+        <section class="admin-page-body">
+          @yield('dashboard')
+          @yield('add_category')
+          @yield('view_category')
+          @yield('update_category')
+          @yield('add_product')
+          @yield('view_product')
+          @yield('update_product')
+          @yield('vieworders')
+          @yield('delivered')
+          @yield('shipped')
+          @yield('coupons')
+          @yield('add_coupon')
+          @yield('edit_coupon')
+          @yield('inventory')
+          @yield('inventory_history')
+          @yield('reports')
+          @yield('payments')
+          @yield('transactions')
+          @yield('users')
+          @yield('settings')
+
+        </section>
+
+        <footer class="footer admin-footer">
+          <div class="footer__block no-margin-bottom block">
+            <div class="container-fluid text-center">
+              <p class="no-margin-bottom">2026 &copy; Pick Me Retailers</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <script src="{{ asset('admin/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ asset('admin/vendor/popper.js/umd/popper.min.js') }}"></script>
+    <script src="{{ asset('admin/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('admin/vendor/jquery.cookie/jquery.cookie.js') }}"></script>
+    <script src="{{ asset('admin/vendor/chart.js/Chart.min.js') }}"></script>
+    <script src="{{ asset('admin/vendor/jquery-validation/jquery.validate.min.js') }}"></script>
+    <script src="{{ asset('admin/js/charts-home.js') }}"></script>
+    <script src="{{ asset('admin/js/front.js') }}"></script>
+    <script>
+      document.querySelectorAll('form[data-submit-once]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          setTimeout(function () {
+            if (e.defaultPrevented) return;
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn) btn.disabled = true;
+          }, 0);
+        });
+      });
+    </script>
+    @stack('scripts')
+  </body>
+</html>
