@@ -26,5 +26,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test Owner',
             'email' => 'admin@pickme.com',
         ]);
+
+        User::updateOrCreate(
+            ['email' => 'raycee.razon@gmail.com'],
+            [
+                'name' => 'Raycee Razon',
+                'user_type' => 'admin',
+            ]
+        );
     }
 }
