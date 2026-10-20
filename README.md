@@ -21,6 +21,9 @@ there is no third-party payment gateway to integrate.
   transaction-ledger entry.
 - **Coupons**, including percentage, fixed-amount, minimum-spend, and free
   shipping.
+- **Flat shipping fee** — a single delivery fee configured by an admin under
+  Settings and added to every order; set it to `0` for free shipping, and a
+  free-shipping coupon waives it per order.
 - **Order tracking**, invoices, reviews, wishlist, and newsletter sign-up.
 - **Store locator** and a bulk-order inquiry form.
 - **Admin panel** for products, inventory (with low-stock and history),

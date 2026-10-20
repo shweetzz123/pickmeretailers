@@ -72,6 +72,7 @@
                   >
                     Edit
                   </a>
+                  @if(auth()->user()?->isOwner())
                   <form
                     action="{{ route('admin.store-locations.destroy', $location) }}"
                     method="POST"
@@ -87,6 +88,7 @@
                       Delete
                     </button>
                   </form>
+                  @endif
                 </td>
               </tr>
             @empty

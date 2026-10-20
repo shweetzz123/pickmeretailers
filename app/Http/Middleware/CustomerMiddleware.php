@@ -15,7 +15,8 @@ class CustomerMiddleware
             return redirect()->route('login');
         }
 
-        if (! Auth::user()->isCustomer() && ! Auth::user()->isAdmin()) {
+        // Both shoppers and staff (owners/clerks) may shop.
+        if (! Auth::user()->isCustomer() && ! Auth::user()->isStaff()) {
             abort(403, 'Unauthorized access.');
         }
 

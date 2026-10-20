@@ -6,7 +6,7 @@ use App\Models\Transaction;
 use App\Models\User;
 
 test('an administrator can view the payment verification queue', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     Order::factory()->create(['payment_status' => 'awaiting_verification']);
 
@@ -23,7 +23,7 @@ test('a non-administrator cannot view the payment queue', function () {
 });
 
 test('an administrator can view the transaction ledger and export it as CSV', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->paid()->create(['total' => 250.00]);
 
     Transaction::create([
@@ -49,7 +49,7 @@ test('an administrator can view the transaction ledger and export it as CSV', fu
 });
 
 test('an administrator can view the users list', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     User::factory()->create(['name' => 'Regular Shopper']);
 
     $this->actingAs($admin)
@@ -58,23 +58,25 @@ test('an administrator can view the users list', function () {
         ->assertSee('Regular Shopper');
 });
 
-test('an administrator can update the GCash payment settings', function () {
-    $admin = User::factory()->admin()->create();
+test('an administrator can update the store settings', function () {
+    $admin = User::factory()->owner()->create();
 
     $this->actingAs($admin)
         ->get(route('admin.settings'))
         ->assertOk()
-        ->assertSee('GCash Payment Settings');
+        ->assertSee('Store Settings');
 
     $this->actingAs($admin)
         ->post(route('admin.settings.update'), [
             'gcash_number' => '09171234567',
             'gcash_name' => 'Pick Me Retailers',
             'gcash_instructions' => 'Scan and pay.',
+            'shipping_fee' => '50',
         ])
         ->assertRedirect();
 
     expect(Setting::get('gcash_number'))->toBe('09171234567');
     expect(Setting::get('gcash_name'))->toBe('Pick Me Retailers');
     expect(Setting::get('gcash_instructions'))->toBe('Scan and pay.');
+    expect(Setting::get('shipping_fee'))->toBe('50.00');
 });

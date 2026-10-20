@@ -81,8 +81,10 @@ class OrderPaymentController extends Controller
 
     protected function authorizeOrder(Order $order): void
     {
+        // Only the order's customer or the owner may view payment/invoice
+        // details — clerks have no access to sales data.
         abort_unless(
-            $order->user_id === Auth::id() || (Auth::user()?->isAdmin() ?? false),
+            $order->user_id === Auth::id() || (Auth::user()?->isOwner() ?? false),
             403,
         );
     }

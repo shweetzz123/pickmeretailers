@@ -103,7 +103,7 @@
             @if((float) $invoice->discount > 0)
                 <div class="line"><span class="muted">Discount</span><span>-&#8369;{{ number_format($invoice->discount, 2) }}</span></div>
             @endif
-            <div class="line"><span class="muted">Shipping</span><span>FREE</span></div>
+            <div class="line"><span class="muted">Shipping</span><span>@if((float) $invoice->shipping_fee > 0)&#8369;{{ number_format($invoice->shipping_fee, 2) }}@else FREE @endif</span></div>
             <div class="line grand"><span>Total</span><span>&#8369;{{ number_format($invoice->total, 2) }}</span></div>
         </div>
 

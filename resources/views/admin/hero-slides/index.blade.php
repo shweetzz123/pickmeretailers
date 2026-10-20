@@ -120,6 +120,7 @@
                   >
                     Edit
                   </a>
+                  @if(auth()->user()?->isOwner())
                   <form
                     action="{{ route('admin.hero-slides.destroy', $slide) }}"
                     method="POST"
@@ -135,6 +136,7 @@
                       Delete
                     </button>
                   </form>
+                  @endif
                 </td>
               </tr>
             @empty

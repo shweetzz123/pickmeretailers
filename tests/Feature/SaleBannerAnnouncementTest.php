@@ -66,7 +66,7 @@ test('the announcement ticker hides banners outside their schedule', function ()
 });
 
 test('admin can flag a sale banner for the announcement ticker', function () {
-    $admin = User::factory()->create(['user_type' => 'admin']);
+    $admin = User::factory()->create(['user_type' => 'owner']);
 
     $this->actingAs($admin)
         ->post(route('admin.sale-banners.store'), [
@@ -84,7 +84,7 @@ test('admin can flag a sale banner for the announcement ticker', function () {
 });
 
 test('admin can unflag a sale banner from the announcement ticker', function () {
-    $admin = User::factory()->create(['user_type' => 'admin']);
+    $admin = User::factory()->create(['user_type' => 'owner']);
     $banner = SaleBanner::factory()->create([
         'title' => 'Flash Sale',
         'show_in_ticker' => true,

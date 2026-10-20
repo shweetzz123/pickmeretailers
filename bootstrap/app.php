@@ -18,7 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // ranges) so $request->ip() resolves to the real client address.
 
         $middleware->alias([
-            'admin' => App\Http\Middleware\AdminMiddleware::class,
+            'admin' => App\Http\Middleware\StaffMiddleware::class,
+            'staff' => App\Http\Middleware\StaffMiddleware::class,
+            'owner' => App\Http\Middleware\OwnerMiddleware::class,
             'customer' => App\Http\Middleware\CustomerMiddleware::class,
             'signed.appurl' => App\Http\Middleware\ValidateAppUrlSignature::class,
         ]);

@@ -186,7 +186,7 @@
                             </td>
                             <td>
                                 <button type="button" class="btn btn-outline-primary btn-sm mr-1" data-toggle="modal" data-target="#adjust-{{ $product->id }}">
-                                    <i class="fa fa-sliders mr-1"></i> Adjust Stock
+                                    <i class="fa fa-sliders mr-1"></i> {{ auth()->user()?->isOwner() ? 'Adjust Stock' : 'Add Stock' }}
                                 </button>
                                 <a href="{{ route('admin.inventory.history', $product->id) }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="fa fa-history mr-1"></i> View History
@@ -228,7 +228,9 @@
                             <label for="type-{{ $product->id }}">Type</label>
                             <select name="type" id="type-{{ $product->id }}" class="form-control" required>
                                 <option value="restock">Restock</option>
+                                @if(auth()->user()?->isOwner())
                                 <option value="adjustment">Set Stock</option>
+                                @endif
                             </select>
                         </div>
                         <div class="form-group">

@@ -27,8 +27,17 @@ class InventoryController extends Controller
 
     public function adjust(Request $request, $id)
     {
+        $user = $request->user();
+
+        // Clerks may only add stock (restock). The "adjustment" type sets an
+        // absolute quantity and could reduce or zero out stock, so it is
+        // reserved for the owner.
+        $types = $user && $user->isOwner()
+            ? 'restock,adjustment'
+            : 'restock';
+
         $validated = $request->validate([
-            'type' => 'required|in:restock,adjustment',
+            'type' => "required|in:{$types}",
             'quantity' => 'required|integer|min:0',
             'notes' => 'nullable|string|max:500',
         ]);

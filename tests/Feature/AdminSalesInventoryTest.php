@@ -7,7 +7,7 @@ use App\Models\User;
 use Carbon\Carbon;
 
 test('reports page loads for admins', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $this->actingAs($admin)->get('/admin/reports')
         ->assertOk()
@@ -16,7 +16,7 @@ test('reports page loads for admins', function () {
 });
 
 test('reports page loads with a date range filter', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $from = Carbon::today()->subDays(7)->format('Y-m-d');
     $to = Carbon::today()->format('Y-m-d');
 
@@ -26,7 +26,7 @@ test('reports page loads with a date range filter', function () {
 });
 
 test('reports csv export returns a csv attachment', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $from = Carbon::today()->subDays(7)->format('Y-m-d');
     $to = Carbon::today()->format('Y-m-d');
 
@@ -40,7 +40,7 @@ test('reports csv export returns a csv attachment', function () {
 });
 
 test('reports csv export escapes formula injection in customer names', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $user = User::factory()->create();
     Order::factory()->create([
         'user_id' => $user->id,
@@ -60,7 +60,7 @@ test('reports csv export escapes formula injection in customer names', function 
 });
 
 test('inventory page loads and lists products', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $product = Product::factory()->create();
 
     $this->actingAs($admin)->get('/admin/inventory')
@@ -69,14 +69,14 @@ test('inventory page loads and lists products', function () {
 });
 
 test('low stock inventory page loads', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $this->actingAs($admin)->get('/admin/inventory/low-stock')
         ->assertOk();
 });
 
 test('inventory history page renders the product change log', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $product = Product::factory()->create();
     InventoryHistory::factory()->create([
         'product_id' => $product->id,

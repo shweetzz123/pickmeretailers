@@ -30,10 +30,33 @@ class AdminUserController extends Controller
 
         $stats = [
             'total' => User::count(),
-            'customers' => User::where('user_type', '!=', 'admin')->count(),
-            'admins' => User::where('user_type', 'admin')->count(),
+            'customers' => User::customers()->count(),
+            'owners' => User::where('user_type', 'owner')->count(),
+            'clerks' => User::where('user_type', 'clerk')->count(),
         ];
 
         return view('admin.users', compact('users', 'stats', 'search'));
+    }
+
+    /**
+     * Promote a customer to clerk, or demote a clerk back to customer.
+     * Owner accounts can never be changed.
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        if ($user->isOwner()) {
+            return redirect()->back()->withErrors(['role' => 'The store owner\'s role cannot be changed.']);
+        }
+
+        $newType = $user->isClerk() ? 'user' : 'clerk';
+
+        $user->forceFill(['user_type' => $newType])->save();
+
+        return redirect()->back()->with(
+            'success',
+            $newType === 'clerk'
+                ? "{$user->name} is now a clerk."
+                : "{$user->name} is no longer a clerk."
+        );
     }
 }

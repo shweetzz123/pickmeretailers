@@ -202,7 +202,11 @@
         </div>
         <div class="flex justify-between font-body-md text-body-md">
           <span class="text-on-surface-variant">Shipping Fee</span>
-          <span class="text-green-600 font-semibold">Free</span>
+          @if((float) $order->shipping_fee > 0)
+            <span class="text-on-surface">&#8369;{{ number_format($order->shipping_fee, 2) }}</span>
+          @else
+            <span class="text-green-600 font-semibold">Free</span>
+          @endif
         </div>
         <div class="flex justify-between pt-3 border-t border-outline-variant">
           <span class="font-headline-sm text-headline-sm text-on-surface">Total</span>

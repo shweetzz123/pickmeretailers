@@ -10,7 +10,7 @@ test('shipped email is queued to the customer when order is marked shipped', fun
     Mail::fake();
     Mail::assertNothingQueued();
 
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->create([
         'status' => 'processing',
         'payment_status' => 'paid',
@@ -33,7 +33,7 @@ test('delivered email is queued to the customer when order is marked delivered',
     Mail::fake();
     Mail::assertNothingQueued();
 
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->create([
         'status' => 'shipped',
         'payment_status' => 'paid',

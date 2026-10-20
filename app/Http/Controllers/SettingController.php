@@ -26,6 +26,7 @@ class SettingController extends Controller
             'gcash_name' => Setting::get('gcash_name', ''),
             'gcash_instructions' => Setting::get('gcash_instructions', ''),
             'gcash_qr_path' => Setting::get('gcash_qr_path'),
+            'shipping_fee' => Setting::get('shipping_fee', '0.00'),
         ];
 
         return view('admin.settings', compact('settings'));
@@ -38,12 +39,14 @@ class SettingController extends Controller
             'gcash_name' => ['nullable', 'string', 'max:255'],
             'gcash_instructions' => ['nullable', 'string', 'max:2000'],
             'gcash_qr' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'shipping_fee' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
         ]);
 
         Setting::putMany([
             'gcash_number' => $validated['gcash_number'] ?? null,
             'gcash_name' => $validated['gcash_name'] ?? null,
             'gcash_instructions' => $validated['gcash_instructions'] ?? null,
+            'shipping_fee' => number_format((float) ($validated['shipping_fee'] ?? 0), 2, '.', ''),
         ]);
 
         if ($request->hasFile('gcash_qr')) {
@@ -54,6 +57,6 @@ class SettingController extends Controller
             Setting::put('gcash_qr_path', $name);
         }
 
-        return redirect()->back()->with('success', 'GCash payment settings updated.');
+        return redirect()->back()->with('success', 'Store settings updated.');
     }
 }

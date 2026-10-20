@@ -20,7 +20,7 @@ function adminLocationPayload(array $overrides = []): array
 }
 
 test('admin can view store locations index', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     StoreLocation::create(adminLocationPayload(['name' => 'Pasay Branch', 'is_pickup' => 1]));
 
     $this->actingAs($admin)
@@ -39,7 +39,7 @@ test('store locations routes are protected', function () {
 });
 
 test('admin can create a store location and set it as pickup', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     StoreLocation::create(adminLocationPayload());
 
     $this->actingAs($admin)
@@ -52,7 +52,7 @@ test('admin can create a store location and set it as pickup', function () {
 });
 
 test('store location validation rejects invalid coordinates', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $this->actingAs($admin)
         ->from(route('admin.store-locations.create'))
@@ -63,7 +63,7 @@ test('store location validation rejects invalid coordinates', function () {
 });
 
 test('admin can update a store location and reassign pickup', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $pasay = StoreLocation::create(adminLocationPayload(['is_pickup' => 1]));
     $gtrias = StoreLocation::create(adminLocationPayload(['name' => 'G.Trias']));
 
@@ -80,7 +80,7 @@ test('admin can update a store location and reassign pickup', function () {
 });
 
 test('deleting the pickup location promotes the next active one', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $pasay = StoreLocation::create(adminLocationPayload(['is_pickup' => 1, 'sort_order' => 0]));
     $gtrias = StoreLocation::create(adminLocationPayload(['name' => 'G.Trias', 'sort_order' => 1]));
 

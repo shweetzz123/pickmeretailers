@@ -76,7 +76,6 @@ class SocialLoginController extends Controller
             ]);
 
             $user->forceFill([
-                'user_type' => 'user',
                 'oauth_provider' => $provider,
                 'oauth_id' => $oauthId,
                 'email_verified_at' => $emailVerified ? now() : null,

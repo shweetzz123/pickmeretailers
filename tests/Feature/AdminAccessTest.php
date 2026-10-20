@@ -15,14 +15,14 @@ test('regular users cannot access admin routes', function () {
 });
 
 test('admins can access admin routes', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $this->actingAs($admin)->get('/view_orders')->assertOk();
 });
 
 test('admin can update an order status with a valid transition', function () {
     Mail::fake();
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->create(['status' => 'pending']);
 
     $this->actingAs($admin)
@@ -35,7 +35,7 @@ test('admin can update an order status with a valid transition', function () {
 });
 
 test('admin cannot update an order status with an invalid transition', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->create(['status' => 'pending']);
 
     $this->actingAs($admin)
@@ -48,7 +48,7 @@ test('admin cannot update an order status with an invalid transition', function 
 });
 
 test('admin cannot update an order status to an invalid value', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $order = Order::factory()->create(['status' => 'pending']);
 
     $this->actingAs($admin)

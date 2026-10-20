@@ -13,11 +13,14 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    /**
+     * user_type is intentionally NOT fillable: roles must only be assigned
+     * through explicit owner-controlled code paths (e.g. AdminUserController).
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'user_type',
         'verification_code',
         'verification_code_expires_at',
     ];
@@ -107,16 +110,59 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Transaction::class);
     }
 
-    public function isAdmin(): bool
+    /**
+     * The store owner: the super user with full, unrestricted access.
+     */
+    public function isOwner(): bool
     {
-        return $this->user_type === 'admin';
+        return $this->user_type === 'owner';
     }
 
     /**
-     * Anyone who can shop. Every non-administrator account is a customer.
+     * A clerk: staff member restricted to adding products and restocking.
+     */
+    public function isClerk(): bool
+    {
+        return $this->user_type === 'clerk';
+    }
+
+    /**
+     * Anyone with access to the admin panel (owner or clerk).
+     */
+    public function isStaff(): bool
+    {
+        return $this->isOwner() || $this->isClerk();
+    }
+
+    /**
+     * Legacy alias for isStaff() — kept for older call sites.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->isStaff();
+    }
+
+    /**
+     * Anyone who can shop. Every non-staff account is a customer.
      */
     public function isCustomer(): bool
     {
-        return ! $this->isAdmin();
+        return ! $this->isStaff();
+    }
+
+    /**
+     * Accounts that are neither owners nor clerks.
+     */
+    public function scopeCustomers($query)
+    {
+        return $query->whereNotIn('user_type', ['owner', 'clerk']);
+    }
+
+    /**
+     * All staff accounts, grouped by role count.
+     */
+    public function scopeStaff($query)
+    {
+        return $query->whereIn('user_type', ['owner', 'clerk']);
     }
 }

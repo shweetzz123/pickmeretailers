@@ -46,11 +46,13 @@
         </td>
         <td style="padding: 12px;">
             <a href="{{ route('admin.coupons.edit', $coupon->id) }}" style="color: green;">Edit</a>
+            @if(auth()->user()?->isOwner())
             <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" style="display:inline;">
                 @csrf
                 @method('DELETE')
                 <button type="submit" style="background:none;border:none;padding:0;color:#dc3545;" onclick="return confirm('Do you want to delete this coupon?')">Delete</button>
             </form>
+            @endif
         </td>
     </tr>
     @endforeach

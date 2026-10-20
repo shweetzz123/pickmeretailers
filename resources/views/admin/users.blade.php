@@ -2,7 +2,7 @@
 
 @section('page_title', 'Users')
 @section('page_header', 'Users')
-@section('page_subtitle', 'Customer and administrator accounts.')
+@section('page_subtitle', 'Customer, clerk, and owner accounts.')
 
 @section('users')
 <div class="container-fluid">
@@ -43,14 +43,23 @@
             <div class="statistic-block block">
                 <div class="progress-details d-flex align-items-end justify-content-between">
                     <div class="title">
-                        <div class="icon"><i class="fa fa-shield"></i></div><strong>Admins</strong>
+                        <div class="icon"><i class="fa fa-shield"></i></div><strong>Staff</strong>
                     </div>
-                    <div class="number dashtext-4">{{ number_format($stats['admins']) }}</div>
+                    <div class="number dashtext-4">{{ number_format($stats['owners'] + $stats['clerks']) }}</div>
                 </div>
-                <small class="text-muted">Full access</small>
+                <small class="text-muted">{{ $stats['owners'] }} owner(s), {{ $stats['clerks'] }} clerk(s)</small>
             </div>
         </div>
     </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">
+            <i class="fa fa-check mr-1"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if($errors->has('role'))
+        <div class="alert alert-danger">{{ $errors->first('role') }}</div>
+    @endif
 
     <div class="block">
         <form method="GET" action="{{ route('admin.users') }}" class="form-inline mb-3">
@@ -71,6 +80,9 @@
                         <th>Account</th>
                         <th class="text-right">Orders</th>
                         <th>Joined</th>
+                        @if(auth()->user()?->isOwner())
+                        <th class="text-right">Role</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -78,13 +90,31 @@
                         <tr>
                             <td>{{ $user->name }} @if($user->id === Auth::id())<span class="badge badge-secondary">you</span>@endif</td>
                             <td>{{ $user->email }}</td>
-                            <td><span class="badge {{ $user->isAdmin() ? 'badge-dark' : 'badge-light' }}">{{ $user->isAdmin() ? 'Administrator' : 'Customer' }}</span></td>
+                            <td>
+                                <span class="badge {{ $user->isOwner() ? 'badge-dark' : ($user->isClerk() ? 'badge-info' : 'badge-light') }}">
+                                    {{ $user->isOwner() ? 'Owner' : ($user->isClerk() ? 'Clerk' : 'Customer') }}
+                                </span>
+                            </td>
                             <td class="text-right">{{ number_format($user->orders_count) }}</td>
                             <td>{{ $user->created_at?->format('M d, Y') ?? '—' }}</td>
+                            @if(auth()->user()?->isOwner())
+                            <td class="text-right">
+                                @if(! $user->isOwner() && $user->id !== Auth::id())
+                                    <form action="{{ route('admin.users.role', $user) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm {{ $user->isClerk() ? 'btn-outline-warning' : 'btn-outline-success' }}"
+                                            onclick="return confirm('{{ $user->isClerk() ? 'Remove clerk access from' : 'Grant clerk access to'}} {{ $user->name }}?')">
+                                            {{ $user->isClerk() ? 'Remove Clerk' : 'Make Clerk' }}
+                                        </button>
+                                    </form>
+                                @endif
+                            </td>
+                            @endif
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No users match your filters.</td>
+                            <td colspan="{{ auth()->user()?->isOwner() ? 6 : 5 }}" class="text-center text-muted py-4">No users match your filters.</td>
                         </tr>
                     @endforelse
                 </tbody>

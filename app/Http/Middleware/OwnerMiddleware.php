@@ -7,7 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+/**
+ * Restricts a route to the store owner (super user). Clerks and regular
+ * customers are rejected with 403.
+ */
+class OwnerMiddleware
 {
     /**
      * Handle an incoming request.
@@ -16,7 +20,7 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && Auth::user()->user_type === 'admin') {
+        if (Auth::check() && Auth::user()->isOwner()) {
             return $next($request);
         }
         abort(403, 'Forbidden');

@@ -164,7 +164,7 @@
               <a class="block px-4 py-3 text-body-md text-on-surface hover:bg-surface-container-low transition-colors" href="{{ route('profile.edit') }}">Profile</a>
               <a class="block px-4 py-3 text-body-md text-on-surface hover:bg-surface-container-low transition-colors" href="{{ route('wishlist') }}">My Wishlist</a>
               <a class="block px-4 py-3 text-body-md text-on-surface hover:bg-surface-container-low transition-colors" href="{{ route('orders.index') }}">My Orders</a>
-              @if(Auth::user()->isAdmin())
+              @if(Auth::user()->isStaff())
                 <div class="border-t border-outline-variant"></div>
                 <a class="block px-4 py-3 text-body-md text-primary font-bold hover:bg-surface-container-low transition-colors" href="{{ route('dashboard') }}">Admin Panel</a>
               @endif
@@ -201,7 +201,7 @@
           <a href="{{ route('profile.edit') }}" class="text-on-surface hover:bg-surface-container-low px-4 py-3 rounded-lg text-body-lg transition-colors" @click="mobileMenu = false">Profile</a>
           <a href="{{ route('wishlist') }}" class="text-on-surface hover:bg-surface-container-low px-4 py-3 rounded-lg text-body-lg transition-colors" @click="mobileMenu = false">My Wishlist</a>
           <a href="{{ route('orders.index') }}" class="text-on-surface hover:bg-surface-container-low px-4 py-3 rounded-lg text-body-lg transition-colors" @click="mobileMenu = false">My Orders</a>
-          @if(Auth::user()->isAdmin())
+          @if(Auth::user()->isStaff())
             <a href="{{ route('dashboard') }}" class="text-primary font-bold hover:bg-surface-container-low px-4 py-3 rounded-lg text-body-lg transition-colors" @click="mobileMenu = false">Admin Panel</a>
           @endif
           <div class="border-t border-outline-variant my-2"></div>

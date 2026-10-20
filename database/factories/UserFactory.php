@@ -45,12 +45,22 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user is an administrator.
+     * Indicate that the user is the store owner (super user).
      */
-    public function admin(): static
+    public function owner(): static
     {
         return $this->afterCreating(function (User $user) {
-            $user->forceFill(['user_type' => 'admin'])->save();
+            $user->forceFill(['user_type' => 'owner'])->save();
+        });
+    }
+
+    /**
+     * Indicate that the user is a clerk (restricted staff).
+     */
+    public function clerk(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $user->forceFill(['user_type' => 'clerk'])->save();
         });
     }
 }

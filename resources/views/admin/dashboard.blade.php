@@ -5,9 +5,11 @@
 @section('page_subtitle', 'Live store snapshot for sales, fulfillment, inventory, and product movement.')
 
 @section('page_actions')
+    @if(auth()->user()?->isOwner())
     <a href="{{ route('admin.vieworders') }}" class="btn btn-primary btn-sm">
         <i class="fa fa-shopping-bag mr-1"></i> View Orders
     </a>
+    @endif
 @endsection
 
 @php
@@ -145,11 +147,16 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
         <div class="mb-3 mb-md-0">
             <h3 class="mb-1">Operations Overview</h3>
-            <p class="text-muted mb-0">This month: PHP {{ number_format($dashboardStats['monthRevenue'], 2) }} paid revenue across current store activity.</p>
+            @if($isOwner)
+                <p class="text-muted mb-0">This month: PHP {{ number_format($dashboardStats['monthRevenue'], 2) }} paid revenue across current store activity.</p>
+            @else
+                <p class="text-muted mb-0">Inventory and product snapshot. Sales figures are visible to the store owner only.</p>
+            @endif
         </div>
     </div>
 
     <div class="row">
+        @if($isOwner)
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="statistic-block block dashboard-stat">
                 <div class="progress-details d-flex align-items-end justify-content-between">
@@ -186,6 +193,20 @@
             </div>
         </div>
 
+        @else
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="statistic-block block dashboard-stat">
+                <div class="progress-details d-flex align-items-end justify-content-between">
+                    <div class="title">
+                        <div class="icon"><i class="fa fa-cubes"></i></div><strong>Total Products</strong>
+                    </div>
+                    <div class="number dashtext-2">{{ number_format($dashboardStats['totalProducts']) }}</div>
+                </div>
+                <small class="text-muted">in the catalog</small>
+            </div>
+        </div>
+        @endif
+
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="statistic-block block dashboard-stat">
                 <div class="progress-details d-flex align-items-end justify-content-between">
@@ -198,6 +219,7 @@
             </div>
         </div>
 
+        @if($isOwner)
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="statistic-block block dashboard-stat">
                 <div class="progress-details d-flex align-items-end justify-content-between">
@@ -209,8 +231,10 @@
                 <small class="text-muted">customer accounts</small>
             </div>
         </div>
+        @endif
     </div>
 
+    @if($isOwner)
     <div class="row">
         <div class="col-xl-8 mb-4">
             <div class="block">
@@ -322,6 +346,8 @@
             </div>
         </div>
     </div>
+
+    @endif
 
     <div class="row">
         <div class="col-xl-6 mb-4">

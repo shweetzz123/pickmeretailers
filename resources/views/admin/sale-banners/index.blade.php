@@ -107,11 +107,13 @@
                             <td class="text-right">{{ $banner->sort_order }}</td>
                             <td>
                                 <a href="{{ route('admin.sale-banners.edit', $banner) }}" class="btn btn-sm btn-primary btn-block">Edit</a>
+                                @if(auth()->user()?->isOwner())
                                 <form action="{{ route('admin.sale-banners.destroy', $banner) }}" method="POST" class="mt-2">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger btn-block" onclick="return confirm('Delete this sale banner?')">Delete</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

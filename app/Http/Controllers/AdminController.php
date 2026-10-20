@@ -25,24 +25,23 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
+        $isOwner = auth()->user()?->isOwner() ?? false;
         $today = Carbon::today();
         $salesStartDate = $today->copy()->subDays(6)->startOfDay();
         $salesEndDate = $today->copy()->endOfDay();
         $hasReorderLevel = Schema::hasColumn('products', 'reorder_level');
         $hasExpiryDate = Schema::hasColumn('products', 'expiry_date');
 
+        // Clerks never see sales, revenue, or order figures — only neutral
+        // inventory/product stats. The sales queries below are owner-only.
         $dashboardStats = [
             'totalProducts' => Product::count(),
-            'totalOrders' => Order::count(),
-            'ordersToday' => Order::whereDate('created_at', $today)->count(),
-            'pendingOrders' => Order::where('status', 'pending')->count(),
-            'paidRevenue' => Order::where('payment_status', 'paid')->sum('total'),
-            'todayRevenue' => Order::where('payment_status', 'paid')
-                ->whereDate('created_at', $today)
-                ->sum('total'),
-            'monthRevenue' => Order::where('payment_status', 'paid')
-                ->whereBetween('created_at', [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()])
-                ->sum('total'),
+            'totalOrders' => 0,
+            'ordersToday' => 0,
+            'pendingOrders' => 0,
+            'paidRevenue' => 0,
+            'todayRevenue' => 0,
+            'monthRevenue' => 0,
             'lowStockProducts' => $hasReorderLevel
                 ? Product::whereColumn('product_quantity', '<', 'reorder_level')->count()
                 : 0,
@@ -52,32 +51,60 @@ class AdminController extends Controller
                     ->where('product_quantity', '>', 0)
                     ->count()
                 : 0,
-            'totalCustomers' => User::where('user_type', '!=', 'admin')->count(),
-            'awaitingVerification' => Order::where('payment_status', 'awaiting_verification')->count(),
-            'pendingPaymentValue' => Order::where('payment_status', 'awaiting_verification')->sum('total'),
+            'totalCustomers' => 0,
+            'awaitingVerification' => 0,
+            'pendingPaymentValue' => 0,
         ];
 
-        $recentOrders = Order::with(['user', 'items.product'])
-            ->latest()
-            ->take(6)
-            ->get()
-            ->each(function ($order) {
-                $order->setRelation('items', $order->items->take(5));
-            });
+        $recentOrders = collect();
+        $topProducts = collect();
+        $orderStatusCounts = collect();
+        $salesTrend = ['labels' => [], 'revenues' => [], 'orders' => []];
 
-        $topProducts = OrderItem::query()
-            ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->whereNotIn('orders.status', ['cancelled', 'returned'])
-            ->select(
-                'products.product_title',
-                DB::raw('SUM(order_items.quantity) as total_quantity'),
-                DB::raw('SUM(order_items.quantity * order_items.price) as total_sales')
-            )
-            ->groupBy('products.id', 'products.product_title')
-            ->orderByDesc('total_quantity')
-            ->take(5)
-            ->get();
+        if ($isOwner) {
+            $dashboardStats['totalOrders'] = Order::count();
+            $dashboardStats['ordersToday'] = Order::whereDate('created_at', $today)->count();
+            $dashboardStats['pendingOrders'] = Order::where('status', 'pending')->count();
+            $dashboardStats['paidRevenue'] = Order::where('payment_status', 'paid')->sum('total');
+            $dashboardStats['todayRevenue'] = Order::where('payment_status', 'paid')
+                ->whereDate('created_at', $today)
+                ->sum('total');
+            $dashboardStats['monthRevenue'] = Order::where('payment_status', 'paid')
+                ->whereBetween('created_at', [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()])
+                ->sum('total');
+            $dashboardStats['totalCustomers'] = User::customers()->count();
+            $dashboardStats['awaitingVerification'] = Order::where('payment_status', 'awaiting_verification')->count();
+            $dashboardStats['pendingPaymentValue'] = Order::where('payment_status', 'awaiting_verification')->sum('total');
+
+            $recentOrders = Order::with(['user', 'items.product'])
+                ->latest()
+                ->take(6)
+                ->get()
+                ->each(function ($order) {
+                    $order->setRelation('items', $order->items->take(5));
+                });
+
+            $topProducts = OrderItem::query()
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->whereNotIn('orders.status', ['cancelled', 'returned'])
+                ->select(
+                    'products.product_title',
+                    DB::raw('SUM(order_items.quantity) as total_quantity'),
+                    DB::raw('SUM(order_items.quantity * order_items.price) as total_sales')
+                )
+                ->groupBy('products.id', 'products.product_title')
+                ->orderByDesc('total_quantity')
+                ->take(5)
+                ->get();
+
+            $orderStatusCounts = Order::query()
+                ->select('status', DB::raw('COUNT(*) as total'))
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $salesTrend = $this->dashboardSalesTrend($salesStartDate, $salesEndDate);
+        }
 
         $lowStockProducts = $hasReorderLevel
             ? Product::whereColumn('product_quantity', '<', 'reorder_level')
@@ -95,14 +122,8 @@ class AdminController extends Controller
                 ->get(['id', 'product_title', 'product_quantity', 'expiry_date'])
             : collect();
 
-        $orderStatusCounts = Order::query()
-            ->select('status', DB::raw('COUNT(*) as total'))
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        $salesTrend = $this->dashboardSalesTrend($salesStartDate, $salesEndDate);
-
         return view('admin.dashboard', compact(
+            'isOwner',
             'dashboardStats',
             'recentOrders',
             'topProducts',
@@ -255,6 +276,19 @@ class AdminController extends Controller
     {
         $validated = $this->validateProduct($request, true);
         $product = Product::findOrFail($id);
+
+        // Clerks can edit products but must never lower stock from this form;
+        // stock can only go up via a restock (inventory screen).
+        if (
+            isset($validated['product_quantity'])
+            && ! $request->user()->isOwner()
+            && (int) $validated['product_quantity'] < (int) $product->product_quantity
+        ) {
+            throw ValidationException::withMessages([
+                'product_quantity' => 'Clerks cannot reduce product stock. Ask the owner to adjust stock.',
+            ]);
+        }
+
         $product->product_title = $validated['product_title'];
         $product->product_description = $validated['product_description'];
         $product->product_category = $validated['product_category'];

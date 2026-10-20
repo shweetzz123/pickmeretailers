@@ -33,8 +33,8 @@
 <br>
 
 @php
-    $delivery = $order->shipping_fee ?? 0;
-    $subtotal = $order->total - $delivery;
+    $delivery = (float) ($order->shipping_fee ?? 0);
+    $subtotal = $order->subtotal();
 @endphp
 
 <table width="100%" cellpadding="5">
@@ -44,7 +44,7 @@
     </tr>
     <tr>
         <td>Delivery Fee:</td>
-        <td align="right">Free</td>
+        <td align="right">{{ $delivery > 0 ? '₱'.number_format($delivery, 2) : 'Free' }}</td>
     </tr>
     @if((float) $order->discount > 0)
     <tr>

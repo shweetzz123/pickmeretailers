@@ -23,11 +23,13 @@
         <td style="padding: 12px;">{{ $category->category }}</td>
         <td style="padding: 12px;">
             <a href="{{ route('admin.categoryupdate', $category->id) }}" style="color: green;" onclick="return confirm('Do you want to update this?')">Update</a>
+            @if(auth()->user()?->isOwner())
             <form action="{{ route('admin.categorydelete', $category->id) }}" method="POST" style="display:inline;">
                 @csrf
                 @method('DELETE')
                 <button type="submit" style="background:none;border:none;padding:0;color:#0d6efd;" onclick="return confirm('Do you want to delete this?')">Delete</button>
             </form>
+            @endif
         </td>
     </tr>
     @endforeach

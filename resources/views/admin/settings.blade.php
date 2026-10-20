@@ -1,8 +1,8 @@
 @extends('admin.maindesign')
 
-@section('page_title', 'GCash Payment Settings')
-@section('page_header', 'GCash Payment Settings')
-@section('page_subtitle', 'The GCash account details and QR code customers see on the payment page.')
+@section('page_title', 'Store Settings')
+@section('page_header', 'Store Settings')
+@section('page_subtitle', 'GCash payment details and the flat delivery fee customers see at checkout.')
 
 @section('settings')
 <div class="container-fluid">
@@ -56,6 +56,21 @@
                         <label for="gcash_qr">GCash QR code image</label>
                         <input type="file" name="gcash_qr" id="gcash_qr" accept="image/*" class="form-control-file">
                         <small class="form-text text-muted">JPG, PNG or WebP up to 4 MB. Uploading replaces the current QR code.</small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="title mb-3">
+                        <strong>Delivery</strong>
+                        <p class="text-muted mb-0">A flat fee added to every order. Set to 0 for free shipping.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shipping_fee">Static shipping fee (&#8369;)</label>
+                        <input type="number" step="0.01" min="0" max="1000000" name="shipping_fee" id="shipping_fee"
+                               value="{{ old('shipping_fee', $settings['shipping_fee']) }}"
+                               class="form-control" placeholder="0.00">
+                        <small class="form-text text-muted">Free-shipping coupons waive this fee.</small>
                     </div>
 
                     <button type="submit" class="btn btn-primary" data-submit-once>

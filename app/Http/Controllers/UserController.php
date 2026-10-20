@@ -137,7 +137,7 @@ class UserController extends Controller
 
     public function index()
     {
-        if (Auth::check() && Auth::user()->user_type === 'admin') {
+        if (Auth::check() && Auth::user()->isStaff()) {
             return app(AdminController::class)->dashboard();
         }
 

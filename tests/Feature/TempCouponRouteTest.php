@@ -3,7 +3,7 @@
 use App\Models\User;
 
 test('admin coupons page loads for admin', function () {
-    $admin = User::factory()->create(['user_type' => 'admin']);
+    $admin = User::factory()->create(['user_type' => 'owner']);
 
     $this->actingAs($admin)
         ->get('/admin/coupons')

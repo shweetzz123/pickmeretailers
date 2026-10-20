@@ -6,7 +6,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 
 test('an administrator can upload a product image larger than two megabytes', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $image = UploadedFile::fake()->image('product.png')->size(3 * 1024);
 
     $response = $this->actingAs($admin)->post(route('admin.postaddproduct'), [
@@ -31,7 +31,7 @@ test('an administrator can upload a product image larger than two megabytes', fu
 });
 
 test('an administrator can upload multiple product images at once', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $response = $this->actingAs($admin)->post(route('admin.postaddproduct'), [
         'product_title' => 'Multi image product',
@@ -66,7 +66,7 @@ test('an administrator can upload multiple product images at once', function () 
 });
 
 test('a product requires at least one image when it is created', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
 
     $response = $this->actingAs($admin)
         ->from(route('admin.addproduct'))

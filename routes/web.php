@@ -89,22 +89,76 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Admin panel — staff area
+|
+| Owners and clerks share the catalog/content/inventory screens. Every
+| destructive (DELETE) route is additionally gated to the owner, and the
+| sales/settings/people sections live in the owner-only group below.
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'staff'])->group(function () {
     Route::get('/add_category', [AdminController::class, 'addCategory'])->name('admin.addcategory');
     Route::post('/add_category', [AdminController::class, 'postAddCategory'])->name('admin.postaddcategory');
     Route::get('/view_category', [AdminController::class, 'viewCategory'])->name('admin.viewcategory');
-    Route::delete('/delete_category/{id}', [AdminController::class, 'deleteCategory'])->name('admin.categorydelete');
     Route::get('/update_category/{id}', [AdminController::class, 'updateCategory'])->name('admin.categoryupdate');
     Route::post('/update_category/{id}', [AdminController::class, 'postUpdatecategory'])->name('admin.postupdatecategory');
 
     Route::get('/add_product', [AdminController::class, 'addProduct'])->name('admin.addproduct');
     Route::post('/add_product', [AdminController::class, 'postAddProduct'])->name('admin.postaddproduct');
     Route::get('/view_product', [AdminController::class, 'viewProduct'])->name('admin.viewproduct');
-    Route::delete('/deleteproduct/{id}', [AdminController::class, 'deleteProduct'])->name('admin.deleteproduct');
     Route::get('/updateproduct/{id}', [AdminController::class, 'updateProduct'])->name('admin.updateproduct');
     Route::post('/update_product/{id}', [AdminController::class, 'postUpdateProduct'])->name('admin.postupdateproduct');
     Route::match(['get', 'post'], '/search', [AdminController::class, 'searchProduct'])->name('admin.searchproduct');
 
+    Route::resource('admin/hero-slides', AdminHeroSlideController::class)
+        ->except('destroy')
+        ->names('admin.hero-slides');
+
+    Route::resource('admin/sale-banners', AdminSaleBannerController::class)
+        ->except('destroy')
+        ->names('admin.sale-banners');
+
+    Route::resource('admin/store-locations', AdminStoreLocationController::class)
+        ->except('destroy')
+        ->names('admin.store-locations');
+
+    Route::resource('admin/coupons', CouponController::class)
+        ->except('destroy')
+        ->names('admin.coupons')
+        ->middleware('throttle:30,1');
+
+    // Inventory: clerks may view and restock, but only owners may apply
+    // "adjustment" entries that can reduce or zero out stock.
+    Route::prefix('admin/inventory')->name('admin.inventory.')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('index');
+        Route::post('/{id}/adjust', [InventoryController::class, 'adjust'])->name('adjust');
+        Route::get('/history/{id}', [InventoryController::class, 'history'])->name('history');
+        Route::get('/low-stock', [InventoryController::class, 'lowStock'])->name('lowStock');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin panel — owner-only (super user)
+|
+| All deletes plus everything sales-related: orders, payments, transactions,
+| reports, store settings, and user/role management.
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'owner'])->group(function () {
+    // Destructive actions — clerks cannot delete anything.
+    Route::delete('/delete_category/{id}', [AdminController::class, 'deleteCategory'])->name('admin.categorydelete');
+    Route::delete('/deleteproduct/{id}', [AdminController::class, 'deleteProduct'])->name('admin.deleteproduct');
+    Route::delete('admin/hero-slides/{hero_slide}', [AdminHeroSlideController::class, 'destroy'])->name('admin.hero-slides.destroy');
+    Route::delete('admin/sale-banners/{sale_banner}', [AdminSaleBannerController::class, 'destroy'])->name('admin.sale-banners.destroy');
+    Route::delete('admin/store-locations/{store_location}', [AdminStoreLocationController::class, 'destroy'])->name('admin.store-locations.destroy');
+    Route::delete('admin/coupons/{coupon}', [CouponController::class, 'destroy'])
+        ->name('admin.coupons.destroy')
+        ->middleware('throttle:30,1');
+
+    // Orders.
     Route::get('/view_orders', [AdminController::class, 'viewOrders'])->name('admin.vieworders');
     Route::patch('/view_orders/{id}/status', [AdminController::class, 'updateStatus'])->name('admin.order.updateStatus');
     Route::delete('/view_orders/{id}', [AdminController::class, 'deleteOrder'])->name('admin.order.delete');
@@ -120,31 +174,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // User management.
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users');
+    Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.role');
 
     // GCash payment settings.
     Route::get('/admin/settings', [SettingController::class, 'edit'])->name('admin.settings');
     Route::post('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
 
-    Route::resource('admin/hero-slides', AdminHeroSlideController::class)
-        ->names('admin.hero-slides');
-
-    Route::resource('admin/sale-banners', AdminSaleBannerController::class)
-        ->names('admin.sale-banners');
-
-    Route::resource('admin/store-locations', AdminStoreLocationController::class)
-        ->names('admin.store-locations');
-
-    Route::resource('admin/coupons', CouponController::class)
-        ->names('admin.coupons')
-        ->middleware('throttle:30,1');
-
-    Route::prefix('admin/inventory')->name('admin.inventory.')->group(function () {
-        Route::get('/', [InventoryController::class, 'index'])->name('index');
-        Route::post('/{id}/adjust', [InventoryController::class, 'adjust'])->name('adjust');
-        Route::get('/history/{id}', [InventoryController::class, 'history'])->name('history');
-        Route::get('/low-stock', [InventoryController::class, 'lowStock'])->name('lowStock');
-    });
-
+    // Sales reports.
     Route::prefix('admin/reports')->name('admin.reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/sales', [ReportController::class, 'salesByDate'])->name('sales');

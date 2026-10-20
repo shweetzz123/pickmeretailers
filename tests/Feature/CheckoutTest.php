@@ -361,6 +361,73 @@ test('free shipping coupon keeps shipping free at zero cost', function () {
     expect(CouponUsage::where('order_id', $order->id)->exists())->toBeTrue();
 });
 
+test('a configured shipping fee is added to the order total', function () {
+    Setting::put('shipping_fee', '50.00');
+
+    $user = User::factory()->create();
+    $product = Product::factory()->create(['product_price' => 100, 'product_quantity' => 5]);
+    Cart::factory()->create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+    ]);
+
+    $this->actingAs($user)->post('/checkout/place-order', validCheckoutPayload());
+
+    $order = Order::where('user_id', $user->id)->first();
+
+    expect((float) $order->shipping_fee)->toBe(50.0);
+    expect((float) $order->total)->toBe(250.0);
+});
+
+test('a free shipping coupon waives the configured shipping fee', function () {
+    Setting::put('shipping_fee', '50.00');
+
+    $user = User::factory()->create();
+    $product = Product::factory()->create(['product_price' => 300, 'product_quantity' => 5]);
+    Cart::factory()->create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+    ]);
+
+    Coupon::factory()->create(['code' => 'FREESHIP', 'type' => 'free_shipping', 'value' => 0, 'min_order' => 500]);
+
+    session(['coupon_code' => 'FREESHIP']);
+
+    $this->actingAs($user)->post('/checkout/place-order', validCheckoutPayload());
+
+    $order = Order::where('user_id', $user->id)->first();
+
+    expect((float) $order->shipping_fee)->toBe(0.0);
+    expect((float) $order->discount)->toBe(0.0);
+    expect((float) $order->total)->toBe(600.0);
+});
+
+test('applying a coupon returns the current shipping fee', function () {
+    Setting::put('shipping_fee', '50.00');
+
+    $user = User::factory()->create();
+    $product = Product::factory()->create(['product_price' => 100, 'product_quantity' => 5]);
+    Cart::factory()->create([
+        'user_id' => $user->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+    ]);
+
+    Coupon::factory()->create(['code' => 'SAVE20', 'type' => 'percentage', 'value' => 20]);
+
+    $this->actingAs($user)
+        ->postJson('/checkout/coupon', ['code' => 'save20'])
+        ->assertOk()
+        ->assertJson([
+            'success' => true,
+            'discount' => 40,
+            'shippingFee' => 50,
+            'grandTotal' => 210,
+        ]);
+});
+
 test('checkout place-order is throttled to prevent stock hoarding', function () {
     $user = User::factory()->create();
 
@@ -494,7 +561,7 @@ test('a customer cannot pay another customer\'s order', function () {
 test('an administrator verifies a payment and the order is marked paid with an invoice and ledger entry', function () {
     Mail::fake();
 
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $user = User::factory()->create();
     $product = Product::factory()->create(['product_quantity' => 10]);
 
@@ -532,7 +599,7 @@ test('an administrator verifies a payment and the order is marked paid with an i
 });
 
 test('an administrator rejects a payment with a reason', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $user = User::factory()->create();
     $order = Order::factory()->create([
         'user_id' => $user->id,
@@ -567,7 +634,7 @@ test('non-administrators cannot verify payments', function () {
 test('the invoice is available after payment and missing before it', function () {
     Mail::fake();
 
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->owner()->create();
     $user = User::factory()->create();
     $product = Product::factory()->create(['product_quantity' => 5]);
 

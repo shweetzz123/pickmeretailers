@@ -287,7 +287,11 @@
               </div>
               <div class="flex justify-between text-on-surface-variant">
                 <span>Shipping</span>
-                <span class="font-price-display text-lg text-green-600 font-semibold">FREE</span>
+                @if($shippingFee > 0)
+                  <span id="shipping-amount" class="font-price-display text-lg">&#8369;{{ number_format($shippingFee, 2) }}</span>
+                @else
+                  <span id="shipping-amount" class="font-price-display text-lg text-green-600 font-semibold">FREE</span>
+                @endif
               </div>
               <div class="flex justify-between text-on-surface pt-4 border-t border-outline-variant mt-4">
                 <span class="font-headline-md text-headline-md">Total</span>
@@ -376,12 +380,15 @@ document.addEventListener('DOMContentLoaded', function() {
   var couponMessage = document.getElementById('coupon-message');
   var discountRow = document.getElementById('discount-row');
   var discountAmount = document.getElementById('discount-amount');
+  var shippingAmount = document.getElementById('shipping-amount');
 
   var regionSelect = document.getElementById('select-region');
 
   var state = {
     subtotal: {{ $total }},
-    discount: {{ $discount }}
+    discount: {{ $discount }},
+    baseShippingFee: {{ $baseShippingFee }},
+    shippingFee: {{ $shippingFee }}
   };
 
   var csrfHeaders = {
@@ -396,8 +403,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function renderTotals() {
-    var grandTotal = state.subtotal - state.discount;
+    var grandTotal = state.subtotal - state.discount + state.shippingFee;
     grandTotalDisplay.innerHTML = '&#8369;' + formatPeso(grandTotal);
+  }
+
+  function renderShipping() {
+    if (!shippingAmount) return;
+    if (state.shippingFee > 0) {
+      shippingAmount.innerHTML = '&#8369;' + formatPeso(state.shippingFee);
+      shippingAmount.classList.remove('text-green-600', 'font-semibold');
+    } else {
+      shippingAmount.innerHTML = 'FREE';
+      shippingAmount.classList.add('text-green-600', 'font-semibold');
+    }
   }
 
   function showCouponMessage(msg, isError) {
@@ -434,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('confirm-contact-phone').textContent = fieldValue('phone');
     document.getElementById('confirm-address-text').textContent = buildAddressSummary();
     document.getElementById('confirm-total').innerHTML =
-      '&#8369;' + formatPeso(state.subtotal - state.discount);
+      '&#8369;' + formatPeso(state.subtotal - state.discount + state.shippingFee);
     modal.classList.remove('hidden');
   }
 
@@ -499,6 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         state.discount = parseFloat(result.data.discount || 0);
+        state.shippingFee = parseFloat(result.data.shippingFee || 0);
         couponInput.value = '';
         couponEntry.classList.add('hidden');
         couponApplied.classList.remove('hidden');
@@ -506,6 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         discountRow.classList.toggle('hidden', state.discount <= 0);
         discountAmount.textContent = formatPeso(state.discount);
         showCouponMessage(result.data.message, false);
+        renderShipping();
         renderTotals();
       })
       .catch(function() {
@@ -522,10 +542,12 @@ document.addEventListener('DOMContentLoaded', function() {
       .then(function(result) {
         if (!result.ok) return;
         state.discount = parseFloat(result.data.discount || 0);
+        state.shippingFee = state.baseShippingFee;
         couponEntry.classList.remove('hidden');
         couponApplied.classList.add('hidden');
         discountRow.classList.add('hidden');
         showCouponMessage('Coupon removed.', false);
+        renderShipping();
         renderTotals();
       })
       .catch(function() {});
@@ -548,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   loadRegions().then(function() {
+    renderShipping();
     renderTotals();
   });
 });

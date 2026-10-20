@@ -67,15 +67,11 @@
     <div class="d-flex align-items-stretch admin-frame">
       <nav id="sidebar" class="admin-sidebar">
         <div class="sidebar-header d-flex align-items-center">
-          <div class="avatar">
-            <img
-              src="{{ asset('frontend/images/img3.jpg') }}"
-              alt="Admin profile"
-              class="img-fluid rounded-circle"
-            />
+          <div class="avatar d-flex align-items-center justify-content-center" aria-hidden="true" style="color:#fff;font-weight:700;font-size:1.25rem;">
+            {{ mb_strtoupper(mb_substr(Auth::user()->name ?? 'Admin', 0, 1)) }}
           </div>
           <div class="title">
-            <h1 class="h5">Admin</h1>
+            <h1 class="h5">{{ auth()->user()?->isOwner() ? 'Owner' : 'Clerk' }}</h1>
             <p>{{ Auth::user()->name ?? 'Store Manager' }}</p>
           </div>
         </div>
@@ -89,6 +85,7 @@
             </a>
           </li>
 
+          @if(auth()->user()?->isOwner())
           <li
             class="{{ request()->routeIs('admin.vieworders') || request()->routeIs('admin.order.*') ? 'active' : '' }}"
           >
@@ -97,6 +94,7 @@
               Orders
             </a>
           </li>
+          @endif
 
           <li class="{{ request()->routeIs('admin.sale-banners.*') ? 'active' : '' }}">
             <a href="{{ route('admin.sale-banners.index') }}">
@@ -156,14 +154,16 @@
           </li>
         </ul>
 
-        <span class="heading">Sales & Inventory</span>
+        <span class="heading">{{ auth()->user()?->isOwner() ? 'Sales & Inventory' : 'Coupons & Inventory' }}</span>
         <ul class="list-unstyled">
+          @if(auth()->user()?->isOwner())
           <li class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
             <a href="{{ route('admin.reports.index') }}">
               <i class="fa fa-bar-chart"></i>
               Reports
             </a>
           </li>
+          @endif
           <li class="{{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}">
             <a href="{{ route('admin.coupons.index') }}">
               <i class="fa fa-ticket"></i>
@@ -178,6 +178,7 @@
           </li>
         </ul>
 
+        @if(auth()->user()?->isOwner())
         <span class="heading">Payments</span>
         <ul class="list-unstyled">
           <li class="{{ request()->routeIs('admin.payments') ? 'active' : '' }}">
@@ -203,15 +204,18 @@
             </a>
           </li>
         </ul>
+        @endif
 
         <span class="heading">Settings</span>
         <ul class="list-unstyled">
+          @if(auth()->user()?->isOwner())
           <li class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
             <a href="{{ route('admin.settings') }}">
-              <i class="fa fa-qrcode"></i>
-              GCash Payment
+              <i class="fa fa-sliders"></i>
+              Store Settings
             </a>
           </li>
+          @endif
           <li class="{{ request()->routeIs('admin.store-locations.*') ? 'active' : '' }}">
             <a href="{{ route('admin.store-locations.index') }}">
               <i class="fa fa-map-marker"></i>
